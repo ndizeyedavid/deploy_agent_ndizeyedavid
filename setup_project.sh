@@ -23,7 +23,7 @@ environment_checkup() {
     fi
 
 	echo ""
-	echo "Verifying workspace directory structure..."
+	echo "Verifying workspace directory structure ..."
 	echo ""
 
 	if [ ! -d "$WORKSPACE" ]; then
