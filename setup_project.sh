@@ -12,6 +12,48 @@ archive_continue() {
     echo "archiving start $1"
 }
 
+environment_checkup() {
+	echo "Starting Environement checkup..."
+	echo ""
+
+    if command -v python3 &> /dev/null; then
+        echo "[OK] Python 3 is installed. Version: $(python3 --version)"
+    else
+        echo "[WARNING] Python 3 is not installed. Please install Python 3 to run this generated workspace."
+    fi
+
+	echo ""
+	echo "Verifying workspace directory structure..."
+	echo ""
+
+	if [ ! -d "$WORKSPACE" ]; then
+		echo "[ERROR] The workspace($WORKSPACE) has not been created"
+		return
+	fi
+
+	if [ ! -f "$WORKSPACE/attendance_checker.py" ]; then
+		echo "[ERROR] The main python file (attendance_checker.py) is missing"
+		return
+	fi
+
+	if [ ! -f "$WORKSPACE/Helpers/assets.csv" ]; then
+		echo "[ERROR] The assets.csv file is missing"
+		return
+	fi
+
+	if [ ! -f "$WORKSPACE/Helpers/config.json" ]; then
+		echo "[ERROR] The config.json file is missing"
+		return
+	fi
+
+	if [ ! -f "$WORKSPACE/reports/reports.log" ]; then
+		echo "[ERROR] The reports.log file is missing"
+	fi
+
+	echo ""
+	echo "[OK] Workspace environment checkup completed"
+}
+
 update_attendance_thresholds() {
     read -p "Do you want to update the attendance thresholds [Y/N]? " IS_UPDATE
 
