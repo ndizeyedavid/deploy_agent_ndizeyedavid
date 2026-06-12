@@ -8,8 +8,8 @@ if [ ! -d "$TEMPLATE_DIR" ]; then
     exit
 fi
 
-archive_continue() {
-    echo "archiving start $1"
+overwrite_workspace() {
+    echo "archiving start for the workspace: $WORKSPACE"
 }
 
 environment_checkup() {
@@ -63,9 +63,6 @@ environment_checkup() {
 		echo ""
 		echo "[OK] Workspace environment checkup completed"
 	fi
-
-
-
 }
 
 update_attendance_thresholds() {
@@ -98,8 +95,15 @@ init_system() {
     WORKSPACE="${PROJECT_NAME}_${PROJ_VARIATION}"
     
     if [ -d "$WORKSPACE" ]; then
-        read -p "This workspace  $WORKSPACE already exists. Do you want to overwrite it [Y/N]? "
-        archive_continue $PROJ_VARIATION
+        read -p "This workspace  $WORKSPACE already exists. Do you want to overwrite it [Y/N]? " OVERWRITE
+        
+		if [[ "$OVERWRITE" =~ ^[Yy]$ ]]; then
+            echo "Overwriting the existing workspace: $WORKSPACE"
+            overwrite_workspace
+        else
+            echo "Aborting the setup process."
+            exit
+        fi
     else
 	echo " Starting to create a new workspace => $WORKSPACE ......"
 
@@ -113,17 +117,18 @@ init_system() {
 
 	echo "[OK] created the workspace directories successfully"
 
-	cp "$TEMPLATE_DIR/attendance_checker.py" "$WORKSPACE"
-        echo "[OK] Migrated the attendance_checker.py file to $WORKSPACE/"
+    files_to_copy=(
+        "attendance_checker.py|$WORKSPACE"
+        "reports.log|$WORKSPACE/reports"
+        "assets.csv|$WORKSPACE/Helpers"
+        "config.json|$WORKSPACE/Helpers"
+    )
 
-        cp "$TEMPLATE_DIR/reports.log" "$WORKSPACE/reports/reports.log"
-	echo "[OK] Migrated the reports.log file to $WORKSPACE/reports/"
-
-	cp "$TEMPLATE_DIR/assets.csv" "$WORKSPACE/Helpers/assets.csv"
-	echo "[OK] Migrated the assets.csv file to $WORKSPACE/Helpers/"
-
-	cp "$TEMPLATE_DIR/config.json" "$WORKSPACE/Helpers/config.json"
-	echo "[OK] Migrated the config.json file to $WORKSPACE/Helpers/"
+    for file_entry in "${files_to_copy[@]}"; do
+        IFS='|' read -r filename dest_dir <<< "$file_entry"
+        cp "$TEMPLATE_DIR/$filename" "$dest_dir"
+        echo "[OK] Migrated the $filename file to $dest_dir/"
+    done
 
 	echo ""
 
