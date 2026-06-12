@@ -3,10 +3,76 @@
 TEMPLATE_DIR="template"
 PROJECT_NAME="attendance_tracker"
 
+trap archive_workspace SIGINT
+
 if [ ! -d "$TEMPLATE_DIR" ]; then
     echo "The source code for the student attandance tracker project is missing"
     exit
 fi
+
+archive_workspace() {
+	clear
+	echo ""
+
+    echo "archiving start for the workspace: $WORKSPACE"
+
+    mkdir -p "archives"
+    LOG_FILE="archives/progress_${WORKSPACE}_$(date +%Y%m%d_%H%M%S).log"
+    ARCHIVE_NAME="archives/${WORKSPACE}_$(date +%Y%m%d_%H%M%S).tar.gz"
+
+    echo "Starting archive process for workspace: $WORKSPACE" >> "$LOG_FILE"
+
+    if [ ! -d "$WORKSPACE" ]; then
+        echo "Workspace directory does not exist - empty workspace" >> "$LOG_FILE"
+        echo "Archive process completed: no files to archive" >> "$LOG_FILE"
+        echo "" >> "$LOG_FILE"
+        exit 0
+    fi
+
+    required_files=(
+        "$WORKSPACE/attendance_checker.py"
+        "$WORKSPACE/Helpers/assets.csv"
+        "$WORKSPACE/Helpers/config.json"
+        "$WORKSPACE/reports/reports.log"
+    )
+
+    missing_files=0
+    for file in "${required_files[@]}"; do
+        if [ ! -f "$file" ]; then
+            echo "Missing required file: $file" >> "$LOG_FILE"
+            ((missing_files++))
+        fi
+    done
+
+	echo ""
+	echo "Missing $missing_files required files"
+	echo ""
+
+	if [ -f "$WORKSPACE/Helpers/config.json" ]; then
+		warning=$(grep -o '"warning": [0-9]*' "$WORKSPACE/Helpers/config.json" | awk '{print $2}')
+		failure=$(grep -o '"failure": [0-9]*' "$WORKSPACE/Helpers/config.json" | awk '{print $2}')
+		
+		if [ "$warning" -eq 75 ] && [ "$failure" -eq 50 ]; then
+			echo "Config thresholds remain at default values: warning=$warning%, failure=$failure%" >> "$LOG_FILE"
+		fi
+	fi
+
+    echo "Creating archive: $ARCHIVE_NAME"
+    if tar -czf "$ARCHIVE_NAME" "$WORKSPACE"; then
+        echo "Successfully created archive"
+        
+		echo ""
+        echo "Deleting incomplete workspace directory"
+        rm -rf "$WORKSPACE"
+		
+		echo ""
+        echo "Archive process completed successfully"
+    else
+        echo "ERROR: Failed to create archive"
+    fi
+
+	exit 0
+}
 
 overwrite_workspace() {
     echo "archiving start for the workspace: $WORKSPACE"
@@ -126,6 +192,7 @@ init_system() {
 
     for file_entry in "${files_to_copy[@]}"; do
         IFS='|' read -r filename dest_dir <<< "$file_entry"
+
         cp "$TEMPLATE_DIR/$filename" "$dest_dir"
         echo "[OK] Migrated the $filename file to $dest_dir/"
     done
