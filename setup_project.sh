@@ -74,10 +74,6 @@ archive_workspace() {
 	exit 0
 }
 
-overwrite_workspace() {
-    echo "archiving start for the workspace: $WORKSPACE"
-}
-
 environment_checkup() {
 	echo "Starting Environement checkup..."
 	echo ""
@@ -165,12 +161,13 @@ init_system() {
         
 		if [[ "$OVERWRITE" =~ ^[Yy]$ ]]; then
             echo "Overwriting the existing workspace: $WORKSPACE"
-            overwrite_workspace
+            rm -rf "$WORKSPACE"
         else
             echo "Aborting the setup process."
             exit
         fi
-    else
+    fi
+
 	echo " Starting to create a new workspace => $WORKSPACE ......"
 
 	mkdir "$WORKSPACE"
@@ -203,7 +200,6 @@ init_system() {
 	echo ""
 
 	update_attendance_thresholds
-    fi
 }
 
 init_system
