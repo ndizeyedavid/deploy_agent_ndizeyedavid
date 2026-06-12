@@ -149,6 +149,28 @@ update_attendance_thresholds() {
     
 }
 
+does_archive_exist() {
+	echo ""
+	
+	if (( ls "archive" | grep -c "$WORKSPACE" == 2 )); then
+		read -p "An archive for this WORKSPACE exists. Do you want to resume it [Y/N]?" RESUME
+
+		if [[ "$RESUME" =~ ^[Yy]$ ]]; then
+			echo ""
+			echo "Extracting the WORKSPACE archive"
+			
+
+		else
+			echo "Creating a brand new WORKSPACE"
+			rm "archive/${WORKSPACE}*" "progress_${WORKSPACE}*"
+			return
+		fi
+
+	else
+		return
+	fi
+}
+
 init_system() {
     clear
     
@@ -167,6 +189,8 @@ init_system() {
             exit
         fi
     fi
+
+	does_archive_exist
 
 	echo " Starting to create a new workspace => $WORKSPACE ......"
 
