@@ -26,32 +26,46 @@ environment_checkup() {
 	echo "Verifying workspace directory structure ..."
 	echo ""
 
-	if [ ! -d "$WORKSPACE" ]; then
-		echo "[ERROR] The workspace($WORKSPACE) has not been created"
+	required_paths=(
+		"$WORKSPACE|The workspace($WORKSPACE) has not been created|directory"
+		"$WORKSPACE/attendance_checker.py|The main python file (attendance_checker.py) is missing|file"
+		"$WORKSPACE/Helpers/assets.csv|The assets.csv file is missing|file"
+		"$WORKSPACE/Helpers/config.json|The config.json file is missing|file"
+		"$WORKSPACE/reports/reports.log|The reports.log file is missing|file"
+	)
+
+	error_occurred=0
+	for path_entry in "${required_paths[@]}"; do
+		IFS='|' read -r path error_msg type <<< "$path_entry"
+		
+		if [ "$type" = "directory" ]; then
+			if [ ! -d "$path" ]; then
+				echo "[ERROR] $error_msg"
+				error_occurred=1
+			else
+				echo "[OK] $path exists"
+			fi
+		else
+			if [ ! -f "$path" ]; then
+				echo "[ERROR] $error_msg"
+				error_occurred=1
+			else
+				echo "[OK] $path exists"
+			fi
+		fi
+	done
+
+	if [ $error_occurred -eq 1 ]; then
+		echo ""
+		echo "[ERROR] Workspace environment checkup failed. Please fix the missing files."
 		return
+	else
+		echo ""
+		echo "[OK] Workspace environment checkup completed"
 	fi
 
-	if [ ! -f "$WORKSPACE/attendance_checker.py" ]; then
-		echo "[ERROR] The main python file (attendance_checker.py) is missing"
-		return
-	fi
 
-	if [ ! -f "$WORKSPACE/Helpers/assets.csv" ]; then
-		echo "[ERROR] The assets.csv file is missing"
-		return
-	fi
 
-	if [ ! -f "$WORKSPACE/Helpers/config.json" ]; then
-		echo "[ERROR] The config.json file is missing"
-		return
-	fi
-
-	if [ ! -f "$WORKSPACE/reports/reports.log" ]; then
-		echo "[ERROR] The reports.log file is missing"
-	fi
-
-	echo ""
-	echo "[OK] Workspace environment checkup completed"
 }
 
 update_attendance_thresholds() {
