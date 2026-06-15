@@ -120,10 +120,11 @@ environment_checkup() {
 	if [ $error_occurred -eq 1 ]; then
 		echo ""
 		echo "[ERROR] Workspace environment checkup failed. Please fix the missing files."
-		return
+		exit 1
 	else
 		echo ""
 		echo "[OK] Workspace environment checkup completed"
+		exit 0
 	fi
 }
 
@@ -133,7 +134,21 @@ update_attendance_thresholds() {
     if [[ "$IS_UPDATE" =~ ^[Yy]$ ]]; then
         read -p "Enter new warning threshold percentage[Default 75%]: " WARNING_THRESHOLD
         read -p "Enter new failure threshold percentage[Default 50%]: " FAILURE_THRESHOLD
-        
+
+        if ! [[ "$WARNING_THRESHOLD" =~ ^[0-9]+$ ]] || ! [[ "$FAILURE_THRESHOLD" =~ ^[0-9]+$ ]]; then
+            clear
+			echo "[ERROR] Thresholds must be valid numbers."
+			update_attendance_thresholds
+        elif [ "$WARNING_THRESHOLD" -lt 0 ] || [ "$WARNING_THRESHOLD" -gt 100 ] || [ "$FAILURE_THRESHOLD" -lt 0 ] || [ "$FAILURE_THRESHOLD" -gt 100 ]; then
+            clear
+			echo "[ERROR] Thresholds must be between 0 and 100."
+			update_attendance_thresholds
+        elif [ "$WARNING_THRESHOLD" -le "$FAILURE_THRESHOLD" ]; then
+			clear
+            echo "[ERROR] Warning threshold must be higher than failure threshold."
+			update_attendance_thresholds
+        fi
+
         sed -i "s/\"warning\": [0-9]*/\"warning\": $WARNING_THRESHOLD/" "$WORKSPACE/Helpers/config.json"
         sed -i "s/\"failure\": [0-9]*/\"failure\": $FAILURE_THRESHOLD/" "$WORKSPACE/Helpers/config.json"
         echo "Updated thresholds: Warning ==> ${WARNING_THRESHOLD}%  |  Failure ==> ${FAILURE_THRESHOLD}%"
