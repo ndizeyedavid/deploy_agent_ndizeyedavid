@@ -18,7 +18,7 @@ archive_workspace() {
 
     mkdir -p "archives"
     LOG_FILE="archives/progress_${WORKSPACE}_$(date +%Y%m%d_%H%M%S).log"
-    ARCHIVE_NAME="archives/${WORKSPACE}_$(date +%Y%m%d_%H%M%S).tar.gz"
+    ARCHIVE_NAME="archives/archive_${WORKSPACE}.tar.gz"
 
     echo "Starting archive process for workspace: $WORKSPACE" >> "$LOG_FILE"
 
@@ -151,21 +151,26 @@ update_attendance_thresholds() {
 
 does_archive_exist() {
 	echo ""
-	
-	if (( ls "archive" | grep -c "$WORKSPACE" == 2 )); then
+
+	ARCHIVE="archives/archive_${WORKSPACE}.tar.gz"
+	if [[ -f "$ARCHIVE" ]]; then
 		read -p "An archive for this WORKSPACE exists. Do you want to resume it [Y/N]?" RESUME
 
 		if [[ "$RESUME" =~ ^[Yy]$ ]]; then
 			echo ""
-			echo "Extracting the WORKSPACE archive"
-			
-
+			echo "Extracting the WORKSPACE archive: $ARCHIVE ...."
+			if tar -xzf "$ARCHIVE"; then
+				echo "Successfully extracted workspace archive: $ARCHIVE"
+				environment_checkup
+				rm -rf "$WORKSPACE"
+			else
+				echo "Failed to extract the archive: $ARCHIVE"
+			fi
 		else
 			echo "Creating a brand new WORKSPACE"
 			rm "archive/${WORKSPACE}*" "progress_${WORKSPACE}*"
 			return
 		fi
-
 	else
 		return
 	fi
