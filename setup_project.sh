@@ -162,13 +162,15 @@ does_archive_exist() {
 			if tar -xzf "$ARCHIVE"; then
 				echo "Successfully extracted workspace archive: $ARCHIVE"
 				environment_checkup
+				rm "$ARCHIVE" "archives/progress_${WORKSPACE}"*
 				rm -rf "$WORKSPACE"
 			else
 				echo "Failed to extract the archive: $ARCHIVE"
+				exit 0
 			fi
 		else
 			echo "Creating a brand new WORKSPACE"
-			rm "archive/${WORKSPACE}*" "progress_${WORKSPACE}*"
+			rm "archives/archive_${WORKSPACE}*" "archives/progress_${WORKSPACE}*"
 			return
 		fi
 	else
