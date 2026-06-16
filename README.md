@@ -22,5 +22,14 @@ chmod +x setup_project.sh
 ```bash
 ./setup_project.sh
 ```
+4. Testing the Intrupt sequence
 
+```bash
+Ctrl + C
+```
+You can send the inturpt signal with this shorcut on any stage of the setup_script inference, and it will trigger the archive_workspace function
+
+5. How to procced on the archived version
+
+You may just run the script again(setup_script.sh) use the same variation name as the one that was archived. The script will automatically detect it and prompt you if you want to proceed with it, or generate a brand new workspace
 
